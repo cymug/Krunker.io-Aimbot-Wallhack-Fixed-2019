@@ -1,23 +1,64 @@
 // ==UserScript==
-// @name        Krunker.io Aimbot, Wallhack, Speedhack, ESP and more!!!
+// @name				 Krunker.io Cheats
 // @namespace    -
-// @version      8.1.0
-// @description  Best working krunker hack of 2019
-// @author       RayanAlami
+// @version      8.1.5
+// @description  Fixed version of Krunker.io cheat
+// @author       RayanAlami/cymug
 // @match        *://krunker.io/*
 // @match        *://moomoo.io/*
 // @include      /^(https?:\/\/)?(www\.)?(.+)krunker\.io(|\/|\/\?(server|party)=.+)$/
 // @grant        GM_xmlhttpRequest
+// @require https://greasyfork.org/scripts/368273-msgpack/code/msgpack.js?version=598723
+// @require http://code.jquery.com/jquery-3.3.1.min.js
+// @require https://code.jquery.com/ui/1.12.0/jquery-ui.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js
 // @run-at       document-start
-// ==/UserScript=
+// ==/UserScript==
 
->>>>>>>>>>>>> DEMO VERSION FOR GITHUB PUBLIC SCRIPT ONLY, DOWNLOAD FROM LINK IN MAIN PAGE TOGET FULL WORKING HACK <<<<<<<<<<<<<
+var msgpack5 = msgpack;
+
+if (window.location.href.includes("moomoo")){
+    $(document).ready(() => {
+
+//Neat cursor: credit to FlareZ 3301#6016
+$("#gameCanvas").css('cursor', 'url(http://cur.cursors-4u.net/user/use-1/use153.cur), default');
+$("#consentBlock").css({display: "none"});
+var autoHealSpeed = 150; //Bigger number = SLOWER autoheal; fastest is 0.
+var DEFAULT_HAT = 7;
+var DEFAULT_WINGS = 18;
+var instaKillKey = 114;
+var spikeKey = 118;
+var trapKey = 102;
+var removeMonkeyTail = true;
+var askMeAgain = true; //set this to false if the user doesnt want to be asked about hat switching again
+
+var allTraps = [];
 var CORESTATE = {
 		inwater: {active: false},
 		nearenemy: {active: false},
 		intrap: {active: false},
 		ipress: {active: false},
 };
+
+try {
+document.getElementById("moomooio_728x90_home").style.display = "none"; //Remove sidney's ads
+    $("#moomooio_728x90_home").parent().css({display: "none"});
+} catch (e) {
+  console.log("error removing ad");
+}
+
+unsafeWindow.onbeforeunload = null;
+
+
+let coreURL =  new URL(window.location.href);
+window.sessionStorage.force = coreURL.searchParams.get("fc");
+
+
+if (window.sessionStorage.force != "false" && window.sessionStorage.force && window.sessionStorage.force.toString() != "null"){
+    console.error(window.sessionStorage.force);
+    /*alert(window.location.force);*/
+    document.getElementsByClassName("menuHeader")[0].innerHTML = `Servers <span style="color: red;">Force (${window.sessionStorage.force})</span>`;
+}
 
 
 var oldAlert = unsafeWindow.alert;
@@ -81,7 +122,22 @@ unsafeWindow.admob = {
 var accessories = [{
 		id: 12,
 		name: "Snowball",
-	\
+		price: 1e3,
+		scale: 105,
+		xOff: 18,
+		desc: "no effect"
+	}, {
+		id: 9,
+		name: "Tree Cape",
+		price: 1e3,
+		scale: 90,
+		desc: "no effect"
+	}, {
+		id: 10,
+		name: "Stone Cape",
+		price: 1e3,
+		scale: 90,
+		desc: "no effect"
 	}, {
 		id: 3,
 		name: "Cookie Cape",
@@ -2121,7 +2177,33 @@ function socketFound(socket){
 
 
     });
-   
+    socket.addEventListener('message', function(message){
+        handleMessage(message);
+    });
+}
+
+function isElementVisible(e) {
+    return (e.offsetParent !== null);
+}
+
+function aim(x, y){
+     var cvs = document.getElementById("gameCanvas");
+     cvs.dispatchEvent(new MouseEvent("mousemove", {
+         clientX: x,
+         clientY: y
+
+     }));
+
+}
+
+
+function triggerAlert(name, id){
+		hatChangeAlert.innerHTML = generateHatHTML(name, id);
+		$("#hatChangeAlert").animate({opacity: 1, top: '20px'});
+		setTimeout( () => {
+			$("#hatChangeAlert").animate({opacity: 0, top: -300});
+		}, 5000);
+}
 
 
 
@@ -2329,7 +2411,31 @@ function handleMessage(m){
              // $("#tbtn").animate({opacity: 0.5});
            }
 
-    
+    }
+
+   if (info[0]=="6"){
+        var locInfo = info[1];
+        if (locInfo[locInfo.length-1].toString() == MYID){ //Object created
+        if (window.innerWidth >= 770){
+            console.log(locInfo);
+            var itemID = `actionBarItem${locInfo[locInfo.length-2]+16}`;
+            var imgURL = document.getElementById(itemID).style.backgroundImage.toString().match(/url\("(.+)?(?=")/)[1];
+            console.info(imgURL);
+            let mapDisplay = document.getElementById("mapDisplay").getBoundingClientRect();
+            let mapSize = [14365, 14365];
+            let boxSize = [$("#mapDisplay").width(), $("#mapDisplay").height()];
+            let targets = [locInfo[1], locInfo[2]].map(item => (130*item)/14365);
+            let x = mapDisplay.x + targets[0] - 6;
+            let y = mapDisplay.y + targets[1] - 6;
+            let newTarget = document.createElement("div");
+            newTarget.rawX = targets[0];
+            newTarget.rawY = targets[1];
+            newTarget.rimgURL = imgURL;
+            newTarget.style = `background-image: url("${imgURL}"); background-size: 12px 12px; width:12px; height:12px; position:absolute; left: ${x}px; top:${y}px; opacity:0; z-index:100; cursor: pointer;`;
+            newTarget.className = "mapTarget";
+            document.getElementsByTagName("body")[0].appendChild(newTarget);
+            $(newTarget).animate({opacity: 1});
+            allMooMooObjects[locInfo[0]] = newTarget;
 
         }
     } else {
@@ -2438,6 +2544,30 @@ function haveApple(){
     }
     if (hasApple) hasApple = isElementVisible(document.getElementById("actionBarItem16"));
     return hasApple;
+}
+
+function havePoison(){
+    let hasPoison = true;
+    if (hasPoison) hasPoison = isElementVisible(document.getElementById("actionBarItem24"));
+    return hasPoison;
+}
+
+/*$(window).resize( () => {
+     for (var elem of Object.values(allMooMooObjects)){
+        let mapDisplay = document.getElementById("mapDisplay").getBoundingClientRect();
+            let mapSize = [14365, 14365];
+            let boxSize = [$("#mapDisplay").width(), $("#mapDisplay").height()];
+            let x = mapDisplay.x + parseInt(elem.rawX) - 6;
+            let y = mapDisplay.y + parseInt(elem.rawY) - 6;
+            console.log(x, y);
+            elem.style = `background-image: url("${elem.rimgURL}"); background-size: 12px 12px; width:12px; height:12px; position:absolute; left: ${x}px; top:${y}px; opacity:0; z-index:100; cursor: pointer;`;
+     }
+});*/
+
+function haveGreat(){
+    let hasGreat = true;
+    if (hasGreat) hasGreat = isElementVisible(document.getElementById("actionBarItem23"));
+    return hasGreat;
 }
 
 function haveSpinning(){
@@ -2900,7 +3030,7 @@ document.ps = placeSpike;
   var current10 = 0;
   var pending;
 
-    var START_ATTACK =  msgpack5.encode(["i",[[1142,16,"f",-1,1,0,0,0,0,0,16,"f",-1,"f"]]]);
+    var START_ATTACK =  msgpack5.encode(["i",[[1142,16,"f",-1,1,0,0,0,0,0,16,"f",-1,"f"]]]);
     var END_ATTACK = [146, 161, 105, 145, 158, 205, 5, 53, 18, 161, 102, 255, 161, 102, 15, 161, 102, 255, 0, 0, 0, 0, 0, 0];
 
   window.WebSocket.prototype.oldSend = WebSocket.prototype.send;
@@ -2959,7 +3089,7 @@ window.stop();
 
 GM_xmlhttpRequest({
     method: "GET",
-    url: `https://cdn.jsdelivr.net/gh/Sam-DevZ/io-track/gamejsv7.js`,
+    url: `https://cdn.jsdelivr.net/gh/Sam-DevZ/io-track/gamejsv6.js`,
     onload: jsresp => {
         let code = jsresp.responseText
 
@@ -2969,11 +3099,10 @@ GM_xmlhttpRequest({
             url: document.location.origin,
             onload: inRes => {
                 let dbody = inRes.responseText;
-                newBody = dbody.replace(/<script src="js\/game\.js\?build=.+"><\/script>/g, `<script src="https://cdn.jsdelivr.net/gh/Sam-DevZ/io-track/gamejsv7.js"></script><script type="text/plain" src="js/game.js?build=fL02f"></script>`);
+                newBody = dbody.replace(/<script src="js\/game\.js\?build=.+"><\/script>/g, `<script src="https://cdn.jsdelivr.net/gh/Sam-DevZ/io-track/gamejsv6.js"></script><script type="text/plain" src="js/game.js?build=fL02f"></script>`);
                 document.open();
                 document.write(newBody);
                 document.close();
-
 
 
                 unsafeWindow.addEventListener("message", (message) => {
@@ -2999,38 +3128,19 @@ var past;
 
 unsafeWindow.mdlsettings = {bhop: true, autoaim: true};
 
-
-
   function handleMessage(m){
-
-
-          $('#aHolder').css({opacity: 0, cursor: "default", marginTop: 5000, position: "absolute"});
-
-       let me = unsafeWindow.players.filter(x=>x.isYou)[0];
-        for (let playerInfo of playerInfos.children){
-                let pname = playerInfo.querySelectorAll(".pInfoH")[0];
-                if (!pname) continue;
-                let pid = parseInt(playerInfo.id.replace("pInfo", ""));
-                let playerObj = unsafeWindow.players.filter(x=>x.sid == pid)[0];
-
-                pname.innerHTML = `${playerObj.name} (${Math.round(dist3(playerObj, me))/10} mm)<h4 style="color: white; text-align: center; margin-top: 20px; margin-bottom: 0px;">[${playerObj.weapon.name}]</h4>`;
-
-        }
-
-
         //window.idleTimer = 0;
         let arr = new Uint8Array(m.data);
         let full = msgpack5.decode(arr);
-        //console.log(full[0]);
-        
-      if (unsafeWindow.mdlsettings.bhop){
+        console.log(full[0]);
+        let me = unsafeWindow.players.filter(x=>x.isYou)[0];
+        if (unsafeWindow.mdlsettings.bhop > 0){
         unsafeWindow.control.keys[32] = unsafeWindow.control.keys[32] ? !unsafeWindow.control.keys[32] : 1
         }
         let nplayers = unsafeWindow.players.filter(x=>x.inView).filter(x=>!x.isYou).filter(x=> (!x.team || (x.team !== me.team))).filter(x=>x.active).sort( (a,b) => dist3(me, a) - dist3(me, b) );
         let closest = nplayers[0];
-        //console.log(closest);
-        //console.log(me.aimVal);
-
+        console.log(closest);
+        console.log(me.aimVal);
         if (closest){
 
         if (!past){
@@ -3045,7 +3155,6 @@ unsafeWindow.mdlsettings = {bhop: true, autoaim: true};
 
         past = new Date().getTime();
 
-        if (!unsafeWindow.mdlsettings.autoaim) return;
         unsafeWindow.control.camLookAt(closest.x, closest.y + closest.height - 3, closest.z);
          console.error("ZOOMING IN ON TARGET");
         unsafeWindow.control.mouseDownR = 1;
@@ -3088,12 +3197,12 @@ unsafeWindow.mdlsettings = {bhop: true, autoaim: true};
     });
   }
 
-/*unsafeWindow.dns = function(json){
+unsafeWindow.dns = function(json){
     let OC = msgpack5.encode(json);
     console.log(OC);
     var aAdd =  Array.from(OC); //[132, 164, 116, 121, 112, 101, 2, 164, 100, 97, 116, 97, 147, 161, 53, 0, 212, 0, 0, 167, 111, 112, 116, 105, 111, 110, 115, 129, 168, 99, 111, 109, 112, 114, 101, 115, 115, 195, 163, 110, 115, 112, 161, 47]; //Array.from(OC);
     return new Uint8Array(aAdd).buffer;
-}*/
+}
 
 
 
@@ -3102,6 +3211,555 @@ setTimeout( () => {
 }, 5000);
 
 
- 
+ var weps =   [{
+        name: "Sniper Rifle",
+        src: "weapon_1",
+        icon: "icon_1",
+        sound: "weapon_1",
+        nAuto: !0,
+        type: 0,
+        scope: !0,
+        swapTime: 300,
+        aimSpeed: 120,
+        spdMlt: .95,
+        ammo: 3,
+        reload: 1500,
+        dmg: 100,
+        pierce: .2,
+        range: 1e3,
+        dropStart: 230,
+        dmgDrop: 30,
+        scale: 1.1,
+        leftHoldY: -.7,
+        rightHoldY: -.75,
+        leftHoldZ: 2.4,
+        rightHoldZ: .4,
+        xOff: .8,
+        yOff: -.75,
+        zOff: -2,
+        xOrg: 0,
+        yOrg: -.55,
+        zOrg: -.8,
+        muzOff: 8,
+        muzMlt: 1.6,
+        rate: 900,
         spread: 260,
         zoom: 2.7,
+        leanMlt: 2,
+        recoil: .009,
+        recoilR: .02,
+        recover: .993,
+        recoverY: .997,
+        recoverF: .975,
+        recoilY: 1,
+        recoilZ: 1.8
+    }, {
+        name: "Assault Rifle",
+        src: "weapon_2",
+        icon: "icon_2",
+        sound: "weapon_2",
+        transp: !0,
+        type: 0,
+        swapTime: 300,
+        aimSpeed: 130,
+        spdMlt: .95,
+        ammo: 30,
+        reload: 1200,
+        dmg: 22,
+        pierce: 1,
+        range: 700,
+        dmgDrop: 10,
+        scale: 1,
+        leftHoldY: -.5,
+        rightHoldY: -.7,
+        leftHoldZ: 2,
+        rightHoldZ: .2,
+        xOff: 1.2,
+        yOff: -1,
+        zOff: -2.5,
+        xOrg: 0,
+        yOrg: -.55,
+        zOrg: -.2,
+        caseZOff: -1.7,
+        caseYOff: -.2,
+        muzOff: 5.9,
+        muzOffY: .3,
+        muzMlt: 1.4,
+        rate: 110,
+        spread: 120,
+        minSpread: 5,
+        zoom: 1.6,
+        leanMlt: 1,
+        recoil: .003,
+        recoilR: .012,
+        recover: .978,
+        recoverY: .995,
+        recoverF: .975,
+        recoilY: 1,
+        recoilZ: 5
+    }, {
+        name: "Pistol",
+        src: "weapon_3",
+        icon: "icon_3",
+        sound: "weapon_3",
+        secondary: !0,
+        transp: !0,
+        nAuto: !0,
+        kill: ["", 75],
+        type: 1,
+        swapTime: 350,
+        aimSpeed: 120,
+        spdMlt: 1.05,
+        ammo: 10,
+        reload: 700,
+        dmg: 20,
+        range: 700,
+        dmgDrop: 10,
+        scale: .95,
+        leftHoldY: -.82,
+        rightHoldY: -.62,
+        leftHoldZ: -.5,
+        rightHoldZ: -.5,
+        xOff: .7,
+        yOff: -.95,
+        zOff: -4.5,
+        xOrg: 0,
+        yOrg: -.2,
+        zOrg: -4.25,
+        caseZOff: .2,
+        caseYOff: 0,
+        muzOff: 1.5,
+        muzOffY: 0,
+        muzMlt: .95,
+        rate: 150,
+        spread: 90,
+        zoom: 1.4,
+        leanMlt: 1,
+        recoil: .006,
+        recoilR: .005,
+        recover: .98,
+        recoverY: .99,
+        recoverF: .98,
+        recoilY: 3,
+        recoilZ: 1
+    }, {
+        name: "Submachine Gun",
+        src: "weapon_4",
+        icon: "icon_4",
+        sound: "weapon_4",
+        transp: !0,
+        type: 0,
+        swapTime: 300,
+        aimSpeed: 120,
+        spdMlt: 1.04,
+        ammo: 24,
+        reload: 1200,
+        dmg: 18,
+        pierce: 1,
+        range: 700,
+        dmgDrop: 12,
+        scale: 1,
+        leftHoldY: -.35,
+        rightHoldY: -.45,
+        leftHoldZ: 1.2,
+        rightHoldZ: -.2,
+        xOff: .95,
+        yOff: -.95,
+        zOff: -3,
+        xOrg: 0,
+        yOrg: -.62,
+        zOrg: -2.5,
+        caseYOff: -.15,
+        caseZOff: -.4,
+        muzOff: 2.7,
+        muzOffY: .1,
+        rate: 90,
+        spread: 170,
+        minSpread: 20,
+        zoom: 1.5,
+        leanMlt: 1.2,
+        recoil: .0034,
+        recoilR: .015,
+        recover: .978,
+        recoverY: .996,
+        recoverF: .975,
+        recoilY: .3,
+        recoilZ: 5.3
+    }, {
+        name: "Revolver",
+        src: "weapon_5",
+        icon: "icon_5",
+        sound: "weapon_5",
+        nAuto: !0,
+        nCase: !0,
+        transp: !0,
+        kill: ["", 50],
+        type: 1,
+        swapTime: 200,
+        aimSpeed: 120,
+        spdMlt: 1.04,
+        ammo: 6,
+        reload: 900,
+        dmg: 66,
+        pierce: .85,
+        dmgDrop: 10,
+        scale: 1.3,
+        leftHoldY: -1,
+        rightHoldY: -.8,
+        leftHoldZ: -.5,
+        rightHoldZ: -.5,
+        xOff: .7,
+        yOff: -.8,
+        zOff: -4.1,
+        xOrg: 0,
+        yOrg: -.35,
+        zOrg: -3.8,
+        muzOff: 2.75,
+        muzOffY: .2,
+        muzMlt: .95,
+        range: 700,
+        rate: 300,
+        spread: 100,
+        zoom: 1.4,
+        leanMlt: 1.6,
+        recoil: .01,
+        recoilR: .01,
+        recover: .982,
+        recoverY: .994,
+        recoverF: .98,
+        recoilY: 1.25,
+        recoilZ: 2
+    }, {
+        name: "Shotgun",
+        src: "weapon_6",
+        icon: "icon_6",
+        sound: "weapon_6",
+        nAuto: !0,
+        nCase: !0,
+        type: 0,
+        swapTime: 300,
+        aimSpeed: 180,
+        spdMlt: 1,
+        ammo: 2,
+        shots: 5,
+        reload: 1100,
+        dmg: 50,
+        dmgDrop: 40,
+        scale: 1.25,
+        leftHoldY: -.7,
+        rightHoldY: -.9,
+        leftHoldZ: 1.2,
+        rightHoldZ: -.3,
+        xOff: .95,
+        yOff: -.8,
+        zOff: -3,
+        xOrg: 0,
+        yOrg: -.2,
+        zOrg: -1.5,
+        muzOff: 6,
+        muzMlt: 1.5,
+        range: 240,
+        rate: 400,
+        innac: 110,
+        spread: 120,
+        minSpread: 20,
+        zoom: 1.25,
+        leanMlt: 1.6,
+        recoil: .013,
+        recoilR: .015,
+        recover: .99,
+        recoverF: .975,
+        recoilY: .8,
+        recoilZ: 2
+    }, {
+        name: "Light Machine Gun",
+        src: "weapon_7",
+        icon: "icon_7",
+        sound: "weapon_7",
+        transp: !0,
+        type: 0,
+        swapTime: 800,
+        aimSpeed: 200,
+        spdMlt: .79,
+        ammo: 100,
+        reload: 2500,
+        dmg: 22,
+        pierce: 1,
+        range: 700,
+        dmgDrop: 10,
+        scale: 1.3,
+        leftHoldY: -.65,
+        leftHoldX: .4,
+        rightHoldY: -.75,
+        leftHoldZ: 1,
+        rightHoldZ: -.2,
+        xOff: .95,
+        yOff: -.8,
+        zOff: -2.8,
+        xOrg: 0,
+        yOrg: -.45,
+        zOrg: -2,
+        caseInd: 2,
+        caseZOff: -.5,
+        caseYOff: -.1,
+        muzOff: 5.5,
+        muzMlt: 1.65,
+        rate: 120,
+        spread: 300,
+        minSpread: 15,
+        zoom: 1.2,
+        leanMlt: 1.6,
+        recoil: .0032,
+        recoilR: .012,
+        recover: .98,
+        recoverY: .9975,
+        recoverF: .975,
+        recoilY: .4,
+        recoilZ: 3.8
+    }, {
+        name: "Semi Auto",
+        src: "weapon_8",
+        icon: "icon_8",
+        sound: "weapon_8",
+        nAuto: !0,
+        type: 0,
+        scope: !0,
+        swapTime: 400,
+        aimSpeed: 120,
+        spdMlt: 1,
+        ammo: 8,
+        reload: 1300,
+        dmg: 35,
+        pierce: .2,
+        range: 1e3,
+        dmgDrop: 0,
+        scale: 1,
+        leftHoldY: -.7,
+        rightHoldY: -.75,
+        leftHoldZ: 2.4,
+        rightHoldZ: .4,
+        xOff: .8,
+        yOff: -.75,
+        zOff: -2,
+        xOrg: 0,
+        yOrg: -.55,
+        zOrg: -.8,
+        muzOff: 5.7,
+        muzOffY: .5,
+        muzMlt: 1.4,
+        rate: 250,
+        spread: 300,
+        zoom: 2.4,
+        leanMlt: 2,
+        recoil: .01,
+        recoilR: .01,
+        recover: .984,
+        recoverY: .997,
+        recoverF: .975,
+        recoilY: .4,
+        recoilZ: 1.8
+    }, {
+        name: "Rocket Launcher",
+        src: "weapon_9",
+        icon: "icon_9",
+        sound: "weapon_9",
+        nSkill: !0,
+        nAuto: !0,
+        nCase: !0,
+        projectile: 0,
+        type: 0,
+        swapTime: 600,
+        aimSpeed: 200,
+        spdMlt: .9,
+        ammo: 1,
+        reload: 1600,
+        scale: 1.3,
+        leftHoldY: -.5,
+        rightHoldY: -.6,
+        leftHoldZ: 3.2,
+        rightHoldZ: 1.6,
+        xOff: .95,
+        yOff: -.4,
+        zOff: -.7,
+        xOrg: 0,
+        yOrg: -.6,
+        zOrg: -1.5,
+        muzOff: 5,
+        muzOffY: 0,
+        muzMlt: 1.5,
+        rate: 1,
+        spread: 120,
+        minSpread: 15,
+        zoom: 1.5,
+        leanMlt: 1.4,
+        recoil: .008,
+        recoilR: .012,
+        recover: .99,
+        recoverY: .998,
+        recoverF: .975,
+        recoilY: .8,
+        recoilZ: 4
+    }, {
+        name: "Akimbo Uzi",
+        src: "weapon_10",
+        icon: "icon_10",
+        sound: "weapon_10",
+        noAim: !0,
+        akimbo: !0,
+        type: 0,
+        swapTime: 300,
+        aimSpeed: 120,
+        spdMlt: 1.04,
+        ammo: 18,
+        reload: 1200,
+        dmg: 18,
+        pierce: 1,
+        range: 700,
+        dmgDrop: 12,
+        scale: .9,
+        rightHoldY: -.55,
+        leftHoldZ: .3,
+        leftHoldX: -.25,
+        leftHoldY: -.55,
+        rightHoldZ: .3,
+        rightHoldX: -.25,
+        holdW: 1.3,
+        xOff: 1.5,
+        yOff: -.95,
+        zOff: -3.3,
+        xOrg: 0,
+        yOrg: -.62,
+        zOrg: -2.5,
+        caseYOff: -.15,
+        caseZOff: -.4,
+        muzOff: 3.6,
+        rate: 60,
+        spread: 50,
+        spreadInc: 1.5,
+        minSpread: 10,
+        zoom: 1.5,
+        leanMlt: 1,
+        recoil: .0034,
+        recoilR: .015,
+        recover: .978,
+        recoverY: .996,
+        recoverF: .975,
+        recoilY: .3,
+        recoilZ: 5
+    }, {
+        name: "Desert Eagle",
+        src: "weapon_11",
+        icon: "icon_11",
+        sound: "weapon_11",
+        secondary: !0,
+        minRec: 15,
+        nAuto: !0,
+        transp: !0,
+        kill: ["", 50],
+        type: 1,
+        swapTime: 200,
+        aimSpeed: 120,
+        spdMlt: 1,
+        ammo: 6,
+        reload: 1e3,
+        dmg: 50,
+        pierce: .85,
+        dmgDrop: 10,
+        scale: .94,
+        leftHoldY: -.9,
+        rightHoldY: -.7,
+        leftHoldZ: -.5,
+        rightHoldZ: -.5,
+        holdW: .95,
+        xOff: 1.3,
+        yOff: -.95,
+        zOff: -4.1,
+        xOrg: 0,
+        yOrg: -.2,
+        zOrg: -3.8,
+        muzOff: 2,
+        muzMlt: 1.1,
+        range: 700,
+        rate: 400,
+        spread: 150,
+        zoom: 1.4,
+        leanMlt: 1.6,
+        recoil: .01,
+        recoilR: .01,
+        recover: .985,
+        recoverY: .996,
+        recoverF: .98,
+        recoilY: 1.4,
+        recoilZ: 2
+    }, {
+        name: "Alien Blaster",
+        src: "weapon_13",
+        icon: "icon_13",
+        sound: "weapon_13",
+        secondary: !0,
+        nAuto: !0,
+        transp: !0,
+        nCase: !0,
+        minRec: 50,
+        kill: ["", 50],
+        type: 1,
+        swapTime: 200,
+        aimSpeed: 120,
+        spdMlt: 1,
+        ammo: 4,
+        reload: 1500,
+        dmg: 40,
+        pierce: .85,
+        dmgDrop: 20,
+        scale: 1.1,
+        leftHoldY: -1,
+        rightHoldY: -.65,
+        leftHoldZ: -.2,
+        rightHoldZ: -.2,
+        xOff: 1.3,
+        yOff: -.95,
+        zOff: -4.1,
+        xOrg: 0,
+        yOrg: -.6,
+        zOrg: -3.8,
+        holdW: .7,
+        muzOff: 2.2,
+        muzOffY: .1,
+        muzID: 3,
+        muzMlt: 1.1,
+        range: 700,
+        rate: 150,
+        spread: 150,
+        zoom: 1.4,
+        leanMlt: 1.6,
+        recoil: .008,
+        recoilR: .01,
+        recover: .985,
+        recoverY: .996,
+        recoverF: .98,
+        recoilY: 1.05,
+        recoilZ: 2
+    }, {
+        name: "Hands",
+        melee: !0,
+        type: 1,
+        swapTime: 350,
+        spdMlt: 1.1,
+        spread: 100,
+        leftHoldY: -.82,
+        leftHoldX: 1.3,
+        rightHoldX: -1.3,
+        rightHoldY: -.82,
+        leftHoldZ: -.5,
+        rightHoldZ: -.5,
+        xOff: 0,
+        yOff: -.95,
+        zOff: -3,
+        xOrg: 0,
+        yOrg: 0,
+        zOrg: 0,
+        leanMlt: 1
+    }]
+
+
+}
