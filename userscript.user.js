@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name				 Krunker.io Cheats
-// @namespace    -
+// @name		 Krunker.io Cheats
+// @namespace    https://github.com/cymug
 // @version      8.1.5
 // @description  Fixed version of Krunker.io cheat
 // @author       RayanAlami/cymug
@@ -8,10 +8,12 @@
 // @match        *://moomoo.io/*
 // @include      /^(https?:\/\/)?(www\.)?(.+)krunker\.io(|\/|\/\?(server|party)=.+)$/
 // @grant        GM_xmlhttpRequest
-// @require https://greasyfork.org/scripts/368273-msgpack/code/msgpack.js?version=598723
-// @require http://code.jquery.com/jquery-3.3.1.min.js
-// @require https://code.jquery.com/ui/1.12.0/jquery-ui.min.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js
+// @require		 https://greasyfork.org/scripts/368273-msgpack/code/msgpack.js?version=598723
+// @require		 http://code.jquery.com/jquery-3.3.1.min.js
+// @require 	 https://code.jquery.com/ui/1.12.0/jquery-ui.min.js
+// @require 	 https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js
+// @downloadURL  https://raw.githubusercontent.com/cymug/Krunker.io-Aimbot-Wallhack-Fixed-2019/master/userscript.user.js
+// @updateURL	 https://raw.githubusercontent.com/cymug/Krunker.io-Aimbot-Wallhack-Fixed-2019/master/userscript.user.js
 // @run-at       document-start
 // ==/UserScript==
 
